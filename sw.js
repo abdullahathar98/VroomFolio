@@ -1,4 +1,4 @@
-const CACHE_NAME = 'car-dossier-v1';
+const CACHE_NAME = 'vroom-folio-v2';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(event){
@@ -9,13 +9,24 @@ self.addEventListener('install', function(event){
 });
 
 self.addEventListener('activate', function(event){
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(function(names){
+      return Promise.all(
+        names.filter(function(n){ return n !== CACHE_NAME; }).map(function(n){ return caches.delete(n); })
+      );
+    }).then(function(){ return self.clients.claim(); })
+  );
 });
 
 self.addEventListener('fetch', function(event){
+  // Network-first: always try to get the freshest file, fall back to cache only if offline.
   event.respondWith(
-    caches.match(event.request).then(function(cached){
-      return cached || fetch(event.request);
+    fetch(event.request).then(function(res){
+      var resClone = res.clone();
+      caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, resClone); });
+      return res;
+    }).catch(function(){
+      return caches.match(event.request);
     })
   );
 });
