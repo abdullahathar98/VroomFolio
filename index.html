@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Car Dossier</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12151a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a;
+    --surface:#1b1f26;
+    --surface-2:#232a33;
+    --border:#333a45;
+    --text:#eae7e1;
+    --text-dim:#8e959c;
+    --accent:#f2a63a;
+    --accent-soft:rgba(242,166,58,0.14);
+    --teal:#52b3a4;
+    --teal-soft:rgba(82,179,164,0.14);
+    --red:#e2685c;
+    --red-soft:rgba(226,104,92,0.14);
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent-soft);}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 20px 100px;}
+
+  header.top{
+    position:relative;
+    padding:28px 24px 24px;
+    margin-bottom:22px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:
+      repeating-linear-gradient(90deg, var(--border) 0 1px, transparent 1px 28px) bottom/100% 8px no-repeat,
+      linear-gradient(180deg, var(--surface), var(--bg));
+    overflow:hidden;
+  }
+  header.top .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  header.top h1{
+    font-family:var(--font-display);
+    font-size:clamp(26px,5vw,36px);
+    margin:6px 0 4px;
+    letter-spacing:-0.01em;
+  }
+  header.top p{
+    margin:0;
+    color:var(--text-dim);
+    font-size:14px;
+    max-width:52ch;
+  }
+  .top-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  button{font-family:var(--font-body);cursor:pointer;}
+  .btn{
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+    padding:10px 16px;
+    border-radius:9px;
+    font-size:13.5px;
+    font-weight:500;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color .15s, transform .1s;
+  }
+  .btn:hover{border-color:var(--text-dim);}
+  .btn:active{transform:scale(.98);}
+  .btn.primary{
+    background:var(--accent);
+    color:#1a1305;
+    border-color:var(--accent);
+    font-weight:600;
+  }
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn.ghost{background:transparent;}
+  .btn.danger-step{border-color:var(--red);color:var(--red);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  select, input[type=text], input[type=number], input[type=date], textarea{
+    font-family:var(--font-body);
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:9px 11px;
+    font-size:13.5px;
+    outline:none;
+  }
+  select:focus, input:focus, textarea:focus{border-color:var(--accent);}
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .toolbar input[type=text]{flex:1;min-width:160px;}
+  .count-pill{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-dim);
+    padding:6px 10px;
+    border:1px solid var(--border);
+    border-radius:20px;
+    white-space:nowrap;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+    gap:14px;
+  }
+
+  .card{
+    position:relative;
+    border:1px solid var(--border);
+    background:var(--surface);
+    border-radius:12px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition:border-color .15s;
+  }
+  .card.selected{border-color:var(--accent);}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .card-head label{
+    display:flex;align-items:center;gap:8px;cursor:pointer;
+  }
+  .card-head input[type=checkbox]{
+    width:16px;height:16px;accent-color:var(--accent);cursor:pointer;
+  }
+  .car-name{font-family:var(--font-display);font-size:17px;font-weight:600;line-height:1.2;}
+  .car-variant{font-size:12.5px;color:var(--text-dim);margin-top:2px;}
+  .year-badge{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--accent);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:3px 7px;
+    white-space:nowrap;
+  }
+
+  .stat-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .stat{
+    flex:1;min-width:80px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+  }
+  .stat .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);}
+  .stat .value{font-family:var(--font-mono);font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin-top:2px;}
+
+  .tuv-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--font-mono);font-size:11.5px;
+    padding:5px 9px;border-radius:20px;
+    border:1px solid var(--border);
+    width:fit-content;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;}
+  .tuv-ok{background:var(--teal-soft);color:var(--teal);border-color:transparent;}
+  .tuv-ok .dot{background:var(--teal);}
+  .tuv-soon{background:var(--accent-soft);color:var(--accent);border-color:transparent;}
+  .tuv-soon .dot{background:var(--accent);}
+  .tuv-expired{background:var(--red-soft);color:var(--red);border-color:transparent;}
+  .tuv-expired .dot{background:var(--red);}
+
+  .chip-block{display:flex;flex-direction:column;gap:5px;}
+  .chip-block .heading{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;}
+  .chip{font-size:12px;padding:3px 8px;border-radius:20px;border:1px solid var(--border);}
+  .chip.pro{color:var(--teal);border-color:transparent;background:var(--teal-soft);}
+  .chip.con{color:var(--red);border-color:transparent;background:var(--red-soft);}
+
+  .notes-text{font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+
+  .card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px;border-top:1px solid var(--border);}
+  .card-foot .left-actions{display:flex;gap:6px;}
+  .icon-btn{
+    background:transparent;border:1px solid var(--border);color:var(--text-dim);
+    padding:6px 10px;border-radius:7px;font-size:12px;
+  }
+  .icon-btn:hover{color:var(--text);border-color:var(--text-dim);}
+  .added-date{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);}
+
+  .empty{
+    text-align:center;padding:70px 20px;color:var(--text-dim);
+    border:1px dashed var(--border);border-radius:14px;
+  }
+  .empty .big{font-family:var(--font-display);font-size:20px;color:var(--text);margin-bottom:6px;}
+
+  .compare-bar{
+    position:fixed;left:0;right:0;bottom:0;
+    display:flex;justify-content:center;
+    padding:16px;
+    pointer-events:none;
+  }
+  .compare-bar-inner{
+    pointer-events:auto;
+    background:var(--surface-2);
+    border:1px solid var(--accent);
+    border-radius:12px;
+    padding:10px 12px 10px 18px;
+    display:flex;align-items:center;gap:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .compare-bar-inner span{font-size:13px;color:var(--text-dim);}
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(8,9,11,.72);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:24px 14px;overflow-y:auto;z-index:50;
+  }
+  .modal{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    width:100%;max-width:560px;
+    padding:22px;
+    margin:auto;
+  }
+  .modal.wide{max-width:920px;}
+  .modal h2{font-family:var(--font-display);font-size:20px;margin:0 0 4px;}
+  .modal .sub{font-size:12.5px;color:var(--text-dim);margin-bottom:18px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .field-row.three{grid-template-columns:1fr 1fr 1fr;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);}
+  .field input, .field select, .field textarea{width:100%;}
+  textarea{resize:vertical;min-height:56px;font-size:13.5px;}
+
+  .tag-input-row{display:flex;gap:6px;}
+  .tag-input-row input{flex:1;}
+  .tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .tag-list .chip{display:flex;align-items:center;gap:6px;}
+  .tag-list .chip button{background:none;border:none;color:inherit;font-size:13px;padding:0;line-height:1;cursor:pointer;}
+
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+
+  table.compare-table{width:100%;border-collapse:collapse;font-size:13px;}
+  table.compare-table th, table.compare-table td{
+    text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;
+  }
+  table.compare-table th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);white-space:nowrap;}
+  table.compare-table td.rowlabel{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);white-space:nowrap;}
+  table.compare-table .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+  .table-scroll{overflow-x:auto;}
+
+  @media (max-width:560px){
+    .field-row, .field-row.three{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">/// personal spec log</div>
+    <h1>Car Dossier</h1>
+    <p>Every car you look at, logged with its numbers, its promises, and its problems — so you never have to remember by heart.</p>
+    <div class="top-actions">
+      <button class="btn primary" id="openAddBtn">+ Log a car</button>
+      <span class="count-pill" id="countPill">0 cars logged</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="Search by name or variant…" />
+    <select id="sortSelect">
+      <option value="added_desc">Recently added</option>
+      <option value="year_desc">Year (newest first)</option>
+      <option value="mileage_asc">Mileage (lowest first)</option>
+      <option value="consumption_asc">Consumption (lowest first)</option>
+      <option value="tuv_asc">TÜV expiry (soonest first)</option>
+    </select>
+  </div>
+
+  <div id="gridArea"><div class="empty"><div class="big">Loading…</div>Fetching your saved cars.</div></div>
+</div>
+
+<div class="compare-bar" id="compareBar" style="display:none;">
+  <div class="compare-bar-inner">
+    <span id="compareCountText">0 selected</span>
+    <button class="btn ghost" id="clearSelectionBtn">Clear</button>
+    <button class="btn primary" id="openCompareBtn">Compare</button>
+  </div>
+</div>
+
+<!-- Add/Edit modal -->
+<div class="modal-overlay" id="formOverlay" style="display:none;">
+  <div class="modal">
+    <h2 id="formTitle">Log a car</h2>
+    <div class="sub">Fill in what you know — you can always come back and edit it.</div>
+
+    <div class="field-row three">
+      <div class="field"><label>Make &amp; model</label><input type="text" id="f_name" placeholder="VW Golf" /></div>
+      <div class="field"><label>Variant / trim</label><input type="text" id="f_variant" placeholder="1.5 TSI Life DSG" /></div>
+      <div class="field"><label>Year</label><input type="number" id="f_year" placeholder="2021" /></div>
+    </div>
+
+    <div class="field-row three">
+      <div class="field"><label>Mileage (km)</label><input type="number" id="f_mileage" placeholder="42000" /></div>
+      <div class="field"><label>Consumption</label><input type="number" step="0.1" id="f_consumption" placeholder="5.8" /></div>
+      <div class="field"><label>Unit</label>
+        <select id="f_unit">
+          <option value="l/100km">l/100km</option>
+          <option value="km/l">km/l</option>
+          <option value="mpg">mpg</option>
+          <option value="kWh/100km">kWh/100km</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field"><label>Price (€)</label><input type="number" id="f_price" placeholder="18500" /></div>
+      <div class="field"><label>TÜV valid until</label><input type="date" id="f_tuv" /></div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Pros</label>
+        <div class="tag-input-row">
+          <input type="text" id="f_pro_input" placeholder="Type a pro, press Enter" />
+          <button class="btn ghost" id="addProBtn">Add</button>
+        </div>
+        <div class="tag-list" id="proTagList"></div>
+      </div>
+      <div class="field">
+        <label>Cons</label>
+        <div class="tag-input-row">
+          <input type="text" id="f_con_input" placeholder="Type a con, press Enter" />
+          <button class="btn ghost" id="addConBtn">Add</button>
+        </div>
+        <div class="tag-list" id="conTagList"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Other specifications / notes</label>
+      <textarea id="f_notes" placeholder="Engine, gearbox, trim details, dealer, anything else worth remembering…"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelFormBtn">Cancel</button>
+      <button class="btn primary" id="saveCarBtn">Save car</button>
+    </div>
+  </div>
+</div>
+
+<!-- Compare modal -->
+<div class="modal-overlay" id="compareOverlay" style="display:none;">
+  <div class="modal wide">
+    <h2>Comparison</h2>
+    <div class="sub">Side by side, same fields, so the differences actually stand out.</div>
+    <div class="table-scroll">
+      <table class="compare-table" id="compareTable"></table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="closeCompareBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- Supabase config ----
+  // Paste your project's anon/publishable key below (Project Settings -> API in Supabase dashboard).
+  var SUPABASE_URL = 'https://xxcxwskzpmnoncrazcyw.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4Y3h3c2t6cG1ub25jcmF6Y3l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MjQ5MzYsImV4cCI6MjEwMjEwMDkzNn0.aybFKQkLkHst9Rd-A2QzLTZu5FBBO1PNR5EiKNMjl4U';
+
+  var cars = [];
+  var editingId = null;
+  var formPros = [];
+  var formCons = [];
+  var selected = new Set();
+  var loadError = false;
+
+  function fmtInt(n){
+    if(n === null || n === undefined || n === '') return '—';
+    return Number(n).toLocaleString('en-US');
+  }
+  function esc(s){
+    var d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+  }
+
+  async function sb(path, options){
+    options = options || {};
+    var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      method: options.method || 'GET',
+      headers: Object.assign({
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': options.prefer || 'return=representation'
+      }, options.headers || {}),
+      body: options.body
+    });
+    if(!res.ok){
+      var errText = await res.text().catch(function(){ return ''; });
+      throw new Error('Supabase ' + res.status + ': ' + errText);
+    }
+    var text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  function rowToCar(row){
+    return {
+      id: row.id,
+      name: row.name,
+      variant: row.variant,
+      year: row.year,
+      mileage: row.mileage,
+      consumption: row.consumption,
+      unit: row.unit,
+      price: row.price,
+      tuvDate: row.tuv_date,
+      pros: row.pros || [],
+      cons: row.cons || [],
+      notes: row.notes,
+      dateAdded: row.date_added
+    };
+  }
+  function carToRow(car){
+    return {
+      id: car.id,
+      name: car.name,
+      variant: car.variant,
+      year: car.year,
+      mileage: car.mileage,
+      consumption: car.consumption,
+      unit: car.unit,
+      price: car.price,
+      tuv_date: car.tuvDate,
+      pros: car.pros,
+      cons: car.cons,
+      notes: car.notes,
+      date_added: car.dateAdded
+    };
+  }
+
+  async function loadCars(){
+    loadError = false;
+    try{
+      var rows = await sb('cars?select=*&order=date_added.desc');
+      cars = (rows || []).map(rowToCar);
+    }catch(e){
+      console.error('Could not load cars', e);
+      cars = [];
+      loadError = true;
+    }
+    render();
+  }
+
+  async function persistNewOrUpdated(car, isEdit){
+    var row = carToRow(car);
+    if(isEdit){
+      await sb('cars?id=eq.' + encodeURIComponent(car.id), {
+        method: 'PATCH',
+        body: JSON.stringify(row)
+      });
+    } else {
+      await sb('cars', {
+        method: 'POST',
+        body: JSON.stringify(row)
+      });
+    }
+  }
+
+  async function persistDelete(id){
+    await sb('cars?id=eq.' + encodeURIComponent(id), { method: 'DELETE', prefer: 'return=minimal' });
+  }
+
+  function tuvStatus(dateStr){
+    if(!dateStr) return null;
+    var d = new Date(dateStr + 'T00:00:00');
+    var now = new Date();
+    var days = Math.round((d - now) / 86400000);
+    var label = d.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
+    if(days < 0) return {cls:'tuv-expired', text:'TÜV expired ' + label};
+    if(days <= 90) return {cls:'tuv-soon', text:'TÜV until ' + label};
+    return {cls:'tuv-ok', text:'TÜV until ' + label};
+  }
+
+  function filteredSorted(){
+    var q = document.getElementById('searchInput').value.trim().toLowerCase();
+    var sort = document.getElementById('sortSelect').value;
+    var list = cars.filter(function(c){
+      if(!q) return true;
+      return (c.name + ' ' + c.variant).toLowerCase().indexOf(q) !== -1;
+    });
+    list = list.slice();
+    if(sort === 'added_desc') list.sort(function(a,b){return b.dateAdded - a.dateAdded;});
+    else if(sort === 'year_desc') list.sort(function(a,b){return (b.year||0) - (a.year||0);});
+    else if(sort === 'mileage_asc') list.sort(function(a,b){return (a.mileage||Infinity) - (b.mileage||Infinity);});
+    else if(sort === 'consumption_asc') list.sort(function(a,b){return (a.consumption||Infinity) - (b.consumption||Infinity);});
+    else if(sort === 'tuv_asc') list.sort(function(a,b){
+      var da = a.tuvDate ? new Date(a.tuvDate) : new Date(8640000000000000);
+      var db = b.tuvDate ? new Date(b.tuvDate) : new Date(8640000000000000);
+      return da - db;
+    });
+    return list;
+  }
+
+  function render(){
+    var grid = document.getElementById('gridArea');
+    var list = filteredSorted();
+    document.getElementById('countPill').textContent = cars.length + (cars.length === 1 ? ' car logged' : ' cars logged');
+
+    if(loadError){
+      grid.innerHTML = '<div class="empty"><div class="big">Couldn\'t connect</div>Check that the Supabase URL and anon key at the top of the script are filled in correctly, then reload.</div>';
+      updateCompareBar();
+      return;
+    }
+    if(cars.length === 0){
+      grid.innerHTML = '<div class="empty"><div class="big">No cars logged yet</div>Tap "Log a car" after your next viewing — before the details blur together.</div>';
+      updateCompareBar();
+      return;
+    }
+    if(list.length === 0){
+      grid.innerHTML = '<div class="empty"><div class="big">No matches</div>Try a different search term.</div>';
+      updateCompareBar();
+      return;
+    }
+
+    var html = '<div class="grid">';
+    list.forEach(function(c){
+      var tuv = tuvStatus(c.tuvDate);
+      var isSel = selected.has(c.id);
+      html += '<div class="card' + (isSel ? ' selected' : '') + '" data-id="' + c.id + '">';
+      html += '  <div class="card-head">';
+      html += '    <label><input type="checkbox" class="selectBox" data-id="' + c.id + '" ' + (isSel?'checked':'') + '/>';
+      html += '      <div><div class="car-name">' + esc(c.name || 'Unnamed') + '</div>';
+      html += '      <div class="car-variant">' + esc(c.variant || '') + '</div></div>';
+      html += '    </label>';
+      html += c.year ? '<div class="year-badge">' + esc(c.year) + '</div>' : '';
+      html += '  </div>';
+
+      html += '  <div class="stat-row">';
+      html += '    <div class="stat"><div class="label">Mileage</div><div class="value">' + (c.mileage ? fmtInt(c.mileage) + ' km' : '—') + '</div></div>';
+      html += '    <div class="stat"><div class="label">Consumption</div><div class="value">' + (c.consumption ? c.consumption + ' ' + esc(c.unit||'') : '—') + '</div></div>';
+      html += '    <div class="stat"><div class="label">Price</div><div class="value">' + (c.price ? '€' + fmtInt(c.price) : '—') + '</div></div>';
+      html += '  </div>';
+
+      if(tuv){
+        html += '  <div class="tuv-pill ' + tuv.cls + '"><span class="dot"></span>' + esc(tuv.text) + '</div>';
+      }
+
+      if(c.pros && c.pros.length){
+        html += '  <div class="chip-block"><div class="heading">Pros</div><div class="chips">';
+        c.pros.forEach(function(p){ html += '<span class="chip pro">' + esc(p) + '</span>'; });
+        html += '</div></div>';
+      }
+      if(c.cons && c.cons.length){
+        html += '  <div class="chip-block"><div class="heading">Cons</div><div class="chips">';
+        c.cons.forEach(function(p){ html += '<span class="chip con">' + esc(p) + '</span>'; });
+        html += '</div></div>';
+      }
+      if(c.notes){
+        html += '  <div class="notes-text">' + esc(c.notes) + '</div>';
+      }
+
+      html += '  <div class="card-foot">';
+      html += '    <div class="left-actions">';
+      html += '      <button class="icon-btn editBtn" data-id="' + c.id + '">Edit</button>';
+      html += '      <button class="icon-btn deleteBtn" data-id="' + c.id + '">Remove</button>';
+      html += '    </div>';
+      html += '    <div class="added-date">' + new Date(c.dateAdded).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + '</div>';
+      html += '  </div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.selectBox').forEach(function(box){
+      box.addEventListener('change', function(){
+        var id = box.getAttribute('data-id');
+        if(box.checked) selected.add(id); else selected.delete(id);
+        box.closest('.card').classList.toggle('selected', box.checked);
+        updateCompareBar();
+      });
+    });
+    grid.querySelectorAll('.editBtn').forEach(function(btn){
+      btn.addEventListener('click', function(){ openForm(btn.getAttribute('data-id')); });
+    });
+    grid.querySelectorAll('.deleteBtn').forEach(function(btn){
+      btn.addEventListener('click', function(){ handleDeleteClick(btn); });
+    });
+
+    updateCompareBar();
+  }
+
+  async function handleDeleteClick(btn){
+    if(btn.dataset.confirming === '1'){
+      var id = btn.getAttribute('data-id');
+      var removed = cars.find(function(c){ return c.id === id; });
+      cars = cars.filter(function(c){ return c.id !== id; });
+      selected.delete(id);
+      render();
+      try{
+        await persistDelete(id);
+      }catch(e){
+        console.error('Delete failed, restoring', e);
+        if(removed) cars.push(removed);
+        render();
+      }
+    } else {
+      btn.dataset.confirming = '1';
+      btn.textContent = 'Confirm?';
+      btn.classList.add('danger-step');
+      setTimeout(function(){
+        if(btn && btn.isConnected){
+          btn.dataset.confirming = '0';
+          btn.textContent = 'Remove';
+          btn.classList.remove('danger-step');
+        }
+      }, 3000);
+    }
+  }
+
+  function updateCompareBar(){
+    var bar = document.getElementById('compareBar');
+    var text = document.getElementById('compareCountText');
+    var openBtn = document.getElementById('openCompareBtn');
+    if(selected.size >= 1){
+      bar.style.display = 'flex';
+      text.textContent = selected.size + (selected.size === 1 ? ' selected' : ' selected');
+      openBtn.disabled = selected.size < 2;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  // ---- Add/Edit form ----
+  function openForm(id){
+    editingId = id || null;
+    formPros = [];
+    formCons = [];
+    var car = id ? cars.find(function(c){ return c.id === id; }) : null;
+
+    document.getElementById('formTitle').textContent = car ? 'Edit car' : 'Log a car';
+    document.getElementById('f_name').value = car ? car.name || '' : '';
+    document.getElementById('f_variant').value = car ? car.variant || '' : '';
+    document.getElementById('f_year').value = car ? car.year || '' : '';
+    document.getElementById('f_mileage').value = car ? car.mileage || '' : '';
+    document.getElementById('f_consumption').value = car ? car.consumption || '' : '';
+    document.getElementById('f_unit').value = car ? car.unit || 'l/100km' : 'l/100km';
+    document.getElementById('f_price').value = car ? car.price || '' : '';
+    document.getElementById('f_tuv').value = car ? car.tuvDate || '' : '';
+    document.getElementById('f_notes').value = car ? car.notes || '' : '';
+    formPros = car && car.pros ? car.pros.slice() : [];
+    formCons = car && car.cons ? car.cons.slice() : [];
+    renderTags();
+
+    document.getElementById('formOverlay').style.display = 'flex';
+  }
+
+  function closeForm(){
+    document.getElementById('formOverlay').style.display = 'none';
+  }
+
+  function renderTags(){
+    var proList = document.getElementById('proTagList');
+    var conList = document.getElementById('conTagList');
+    proList.innerHTML = formPros.map(function(p,i){
+      return '<span class="chip pro">' + esc(p) + '<button data-i="'+i+'" class="removeProTag">×</button></span>';
+    }).join('');
+    conList.innerHTML = formCons.map(function(p,i){
+      return '<span class="chip con">' + esc(p) + '<button data-i="'+i+'" class="removeConTag">×</button></span>';
+    }).join('');
+    proList.querySelectorAll('.removeProTag').forEach(function(b){
+      b.addEventListener('click', function(){ formPros.splice(Number(b.getAttribute('data-i')),1); renderTags(); });
+    });
+    conList.querySelectorAll('.removeConTag').forEach(function(b){
+      b.addEventListener('click', function(){ formCons.splice(Number(b.getAttribute('data-i')),1); renderTags(); });
+    });
+  }
+
+  function addProFromInput(){
+    var inp = document.getElementById('f_pro_input');
+    var v = inp.value.trim();
+    if(v){ formPros.push(v); inp.value=''; renderTags(); }
+  }
+  function addConFromInput(){
+    var inp = document.getElementById('f_con_input');
+    var v = inp.value.trim();
+    if(v){ formCons.push(v); inp.value=''; renderTags(); }
+  }
+
+  async function saveCar(){
+    var name = document.getElementById('f_name').value.trim();
+    if(!name){
+      document.getElementById('f_name').focus();
+      document.getElementById('f_name').style.borderColor = 'var(--red)';
+      return;
+    }
+    var car = {
+      id: editingId || ('c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7)),
+      name: name,
+      variant: document.getElementById('f_variant').value.trim(),
+      year: document.getElementById('f_year').value ? Number(document.getElementById('f_year').value) : null,
+      mileage: document.getElementById('f_mileage').value ? Number(document.getElementById('f_mileage').value) : null,
+      consumption: document.getElementById('f_consumption').value ? Number(document.getElementById('f_consumption').value) : null,
+      unit: document.getElementById('f_unit').value,
+      price: document.getElementById('f_price').value ? Number(document.getElementById('f_price').value) : null,
+      tuvDate: document.getElementById('f_tuv').value || null,
+      pros: formPros.slice(),
+      cons: formCons.slice(),
+      notes: document.getElementById('f_notes').value.trim(),
+      dateAdded: editingId ? (cars.find(function(c){return c.id===editingId;}) || {}).dateAdded || Date.now() : Date.now()
+    };
+    var saveBtn = document.getElementById('saveCarBtn');
+    var wasEdit = !!editingId;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    try{
+      await persistNewOrUpdated(car, wasEdit);
+      closeForm();
+      await loadCars();
+    }catch(e){
+      console.error('Save failed', e);
+      alert('Could not save to the database. Check your connection and that the Supabase key is set correctly, then try again.');
+    }finally{
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save car';
+    }
+  }
+
+  // ---- Compare ----
+  function openCompare(){
+    var chosen = cars.filter(function(c){ return selected.has(c.id); });
+    var rows = [
+      {label:'Year', get:function(c){return c.year || '—';}},
+      {label:'Mileage', get:function(c){return c.mileage ? fmtInt(c.mileage) + ' km' : '—';}},
+      {label:'Consumption', get:function(c){return c.consumption ? c.consumption + ' ' + (c.unit||'') : '—';}},
+      {label:'Price', get:function(c){return c.price ? '€' + fmtInt(c.price) : '—';}},
+      {label:'TÜV', get:function(c){ var t = tuvStatus(c.tuvDate); return t ? t.text.replace('TÜV ',''): '—'; }},
+      {label:'Pros', get:function(c){return c.pros && c.pros.length ? c.pros.join(', ') : '—';}},
+      {label:'Cons', get:function(c){return c.cons && c.cons.length ? c.cons.join(', ') : '—';}},
+      {label:'Notes', get:function(c){return c.notes || '—';}}
+    ];
+    var html = '<thead><tr><th></th>';
+    chosen.forEach(function(c){
+      html += '<th>' + esc(c.name) + (c.variant ? '<br><span style="font-family:var(--font-body);text-transform:none;letter-spacing:0;color:var(--text)">' + esc(c.variant) + '</span>' : '') + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+    rows.forEach(function(r){
+      html += '<tr><td class="rowlabel">' + r.label + '</td>';
+      chosen.forEach(function(c){
+        var isNum = (r.label === 'Year' || r.label === 'Mileage' || r.label === 'Consumption' || r.label === 'Price');
+        html += '<td class="' + (isNum?'num':'') + '">' + esc(r.get(c)) + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    document.getElementById('compareTable').innerHTML = html;
+    document.getElementById('compareOverlay').style.display = 'flex';
+  }
+  function closeCompare(){
+    document.getElementById('compareOverlay').style.display = 'none';
+  }
+
+  // ---- wire up events ----
+  document.getElementById('openAddBtn').addEventListener('click', function(){ openForm(null); });
+  document.getElementById('cancelFormBtn').addEventListener('click', closeForm);
+  document.getElementById('saveCarBtn').addEventListener('click', saveCar);
+  document.getElementById('addProBtn').addEventListener('click', addProFromInput);
+  document.getElementById('addConBtn').addEventListener('click', addConFromInput);
+  document.getElementById('f_pro_input').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); addProFromInput(); } });
+  document.getElementById('f_con_input').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); addConFromInput(); } });
+  document.getElementById('f_name').addEventListener('input', function(){ this.style.borderColor=''; });
+
+  document.getElementById('searchInput').addEventListener('input', render);
+  document.getElementById('sortSelect').addEventListener('change', render);
+
+  document.getElementById('clearSelectionBtn').addEventListener('click', function(){ selected.clear(); render(); });
+  document.getElementById('openCompareBtn').addEventListener('click', openCompare);
+  document.getElementById('closeCompareBtn').addEventListener('click', closeCompare);
+
+  document.getElementById('formOverlay').addEventListener('click', function(e){ if(e.target === this) closeForm(); });
+  document.getElementById('compareOverlay').addEventListener('click', function(e){ if(e.target === this) closeCompare(); });
+
+  loadCars();
+})();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
