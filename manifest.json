@@ -1,6 +1,6 @@
 {
-  "name": "Car Dossier",
-  "short_name": "Car Dossier",
+  "name": "Vroom Folio",
+  "short_name": "Vroom Folio",
   "description": "Personal log for comparing cars you've looked at.",
   "start_url": "./index.html",
   "scope": "./",
